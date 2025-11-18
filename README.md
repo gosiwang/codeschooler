@@ -273,13 +273,6 @@ npm start
 * MySQL 테이블 설계
 * REST API 설계 및 개발
 
-### 🟦 **AI 서버 — Flask 전 기능 개발**
-
-* Gemini 기반 이론/문제/정답 생성
-* HuggingFace 오류 분류 모델 연동
-* RestrictedPython 샌드박스 실행
-* 코드 채점 및 분석 엔진 개발
-
 ### 🟨 **프론트엔드 — React UI 개발**
 
 * AI Chat UI, CodeMirror Editor, 대시보드 개발
