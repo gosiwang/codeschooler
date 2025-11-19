@@ -65,24 +65,114 @@ Python 이론 학습 → 문제 생성 → 코드 작성 → AI 채점 → 피�
 
 ---
 
-# 🏗 전체 아키텍처 (Architecture)
+## 시스템 아키텍처
 
-```
-┌──────────────────────────────┐        ┌──────────────────────────┐
-│         React Frontend       │        │     Spring Boot API      │
-│  - LearnPage.jsx             │ <----> │  - User / Answer / Code  │
-│  - Login / Code Editor       │        │  - MySQL 저장             │
-└───────────────▲──────────────┘        └────────────▲─────────────┘
-                │                                      │
-                │ REST API                              │ REST API
-                ▼                                      ▼
-        ┌──────────────────────┐            ┌──────────────────────┐
-        │   Flask AI Server    │            │       MySQL DB       │
-        │ - Gemini 이론/문제 생성            │ users, answers,      │
-        │ - HF 오류분석 모델     │            │ code_submissions     │
-        │ - RestrictedPython 실행           └──────────────────────┘
-        └──────────────────────┘
-```
+CodeSchooler는 다음 네 가지 컴포넌트로 구성된 웹 기반 파이썬 학습 플랫폼입니다.
+
+![CodeSchooler 시스템 아키텍처](./docs/codeschooler-architecture.png)
+
+---
+
+### 1. Web Client (React SPA)
+
+- React 기반 단일 페이지 애플리케이션(SPA)
+- 주요 화면
+  - 이론 학습 화면
+  - 문제 풀이 및 코드 에디터(CodeMirror)
+  - 채점/피드백 결과 보기
+  - 학습 통계 대시보드(Recharts)
+- 역할
+  - 사용자 입력 처리(코드, 답안, 로그인 정보 등)
+  - Axios를 통해 Spring Boot 백엔드 API 호출
+  - JWT를 저장/전달하여 인증이 필요한 요청 전송
+  - 실행 결과, 피드백, 통계를 시각적으로 렌더링
+
+---
+
+### 2. Backend API Server (Spring Boot)
+
+- Spring Boot 기반 REST API 서버
+- 주요 모듈
+  - 인증/사용자 관리
+    - 회원가입, 로그인, JWT 발급 및 검증
+  - 학습 콘텐츠 관리
+    - 이론(Theory), 문제(Problem), 예시 정답 관리
+  - 제출/채점 기록 관리
+    - 코드 제출(CodeSubmission), 답안(Answer) 저장
+    - 실행 결과, 정답 여부, 피드백 저장
+  - 통계/대시보드
+    - 사용자별 정답률, 제출 횟수, 최근 학습 문제 조회
+  - 외부 서비스 연동
+    - Flask 코드 실행/피드백 서버와 HTTP 통신
+- 구조
+  - Controller → Service → Repository → MySQL
+  - 주요 엔티티: User, Problem, Answer, CodeSubmission, Feedback, LearningStats
+
+---
+
+### 3. Code Execution & Feedback Server (Flask)
+
+- Python/Flask 기반 보조 서버(마이크로서비스)
+- 역할
+  - 코드 실행
+    - 제한된 샌드박스 환경에서 파이썬 코드 실행
+    - 표준 출력, 리턴값, 예외 정보를 수집
+  - 오류/코드 분석
+    - 에러 메시지, 코드 패턴 등을 분석해 오류 유형 분류
+  - 피드백 생성
+    - 오류 유형에 따라 이해하기 쉬운 설명과 수정 방향 제안
+  - Spring Boot와의 통신
+    - 입력: 사용자 ID, 문제 ID, 코드 등
+    - 출력: 실행 결과, 성공 여부, 오류 유형, 피드백(JSON)
+- Spring Boot는 Flask 응답을 받아 DB에 저장하고, 다시 React로 전달합니다.
+
+---
+
+### 4. Database (MySQL)
+
+- MySQL 기반 관계형 데이터베이스
+- 주요 테이블(엔티티)
+  - `users`
+    - id, username, password, role, created_at, updated_at
+  - `problems`
+    - id, title, description, difficulty, topic, sample_input, sample_output
+  - `theories`
+    - id, title, content, topic, order_index
+  - `answers`
+    - id, user_id, problem_id, user_answer, is_correct, submitted_at
+  - `code_submissions`
+    - id, user_id, problem_id, code, result, is_success, error_type, created_at
+  - `feedbacks` (또는 code_submissions에 포함)
+    - id, submission_id, feedback_text
+  - `learning_stats`
+    - user별 제출 수, 정답 수, 최근 학습 일자, 주제별 통계 등 집계 데이터
+- JPA를 통해 엔티티 간 연관 관계를 맺어 관리합니다.
+  - User (1) : (N) CodeSubmission
+  - Problem (1) : (N) CodeSubmission
+  - CodeSubmission (1) : (1) Feedback (또는 1:N)
+
+---
+
+### 5. 요청 흐름 요약
+
+1. 사용자가 React 클라이언트에서 로그인 → Spring Boot에서 JWT 발급
+2. 문제/이론 조회 요청 → Spring Boot → MySQL에서 데이터 조회 → React에 응답
+3. 코드 제출
+   - React: `/api/submissions`로 코드 + JWT 전송
+   - Spring Boot:
+     - 사용자/문제 정보 검증 후 CodeSubmission 생성
+     - Flask `/execute-code` API 호출
+   - Flask:
+     - 코드 실행 및 오류/피드백 생성 후 JSON 응답
+   - Spring Boot:
+     - 실행 결과와 피드백을 DB에 저장
+     - 최종 결과를 React로 반환
+   - React:
+     - 코드 실행 결과, 피드백, 정답 여부를 화면에 표시
+4. 학습 통계
+   - React → Spring Boot `/api/stats/my`
+   - Spring Boot → MySQL에서 제출/정답 데이터 집계
+   - React에서 Recharts로 차트 렌더링
 
 ---
 
