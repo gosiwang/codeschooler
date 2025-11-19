@@ -67,10 +67,9 @@ Python 이론 학습 → 문제 생성 → 코드 작성 → AI 채점 → 피�
 
 # 🏗 전체 아키텍처 (Architecture)
 
-```
+
 <img width="1180" height="764" alt="스크린샷 2025-11-19 175326" src="https://github.com/user-attachments/assets/10de8855-b8c7-4098-a7c7-a439b4301dfe" />
 
-```
 
 ---
 
