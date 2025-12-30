@@ -1,19 +1,18 @@
 package com.example.demo.answer;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api")
+@RequiredArgsConstructor
 public class AnswerController {
 
     private final AnswerService answerService;
 
-    @Autowired
-    public AnswerController(AnswerService answerService) {
-        this.answerService = answerService;
-    }
+    
 
     // POST 엔드포인트: Gemini가 생성한 정답을 저장
     @PostMapping("/save-answer")
