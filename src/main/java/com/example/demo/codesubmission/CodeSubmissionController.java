@@ -2,6 +2,7 @@ package com.example.demo.codesubmission;
 
 import com.example.demo.user.User;
 import com.example.demo.user.UserRepository;
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,17 +13,14 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/submit-code")
+@RequiredArgsConstructor
 public class CodeSubmissionController {
     private static final Logger logger = LoggerFactory.getLogger(CodeSubmissionController.class);
 
     private final CodeSubmissionService submissionService;
     private final UserRepository userRepository;
 
-    @Autowired
-    public CodeSubmissionController(CodeSubmissionService submissionService, UserRepository userRepository) {
-        this.submissionService = submissionService;
-        this.userRepository = userRepository;
-    }
+
 
     // 제출된 코드 저장 엔드포인트
     @PostMapping

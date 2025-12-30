@@ -1,0 +1,31 @@
+spring:
+  application:
+    name: backproject
+
+  datasource:
+    url: jdbc:mysql://localhost:3306/codingmachine?useSSL=false&characterEncoding=UTF-8&serverTimezone=UTC
+    username: root
+    password: gongsi12
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    show-sql: true
+    generate-ddl: true
+    database: mysql
+    database-platform: org.hibernate.dialect.MySQL8Dialect
+
+    hibernate:
+      ddl-auto: update
+      naming:
+        physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+
+    properties:
+      hibernate:
+        format_sql: true
+        enable_lazy_load_no_trans: true
+
+  jwt:
+    secret: c2lsdmVybmluZS10ZWNoLXNwcmluZy1ib290LWp3dC10dXRvcmlhbC1zZWNyZXQtc2lsdmVybmluZS10ZWNoLXNwcmluZy1ib290LWp3dC10dXRvcmlhbC1zZWNyZXQK
+
+server:
+  port: ${PORT:8080}
